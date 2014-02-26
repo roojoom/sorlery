@@ -15,7 +15,14 @@ class QueuedThumbnailBackend(ThumbnailBackend):
     Queue thumbnail generation with django-celery.
     """
     def get_thumbnail(self, file_, geometry_string, **options):
-        source = ImageFile(file_)
+        # Correct way for create source image, This is coped from begining of
+        # ThumbnailBackend.get_thumbnail
+        if file_:
+            source = ImageFile(file_)
+        elif settings.THUMBNAIL_DUMMY:
+            return DummyImageFile(geometry_string)
+        else:
+            return None
 
         for key, value in self.default_options.iteritems():
             options.setdefault(key, value)
