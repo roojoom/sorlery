@@ -8,6 +8,9 @@ from sorl.thumbnail.parsers import parse_geometry
 from sorl.thumbnail.base import ThumbnailBackend
 
 from sorlery.tasks import create_thumbnail
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class QueuedThumbnailBackend(ThumbnailBackend):
