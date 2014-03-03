@@ -40,6 +40,26 @@ class QueuedThumbnailBackend(ThumbnailBackend):
         cached = default.kvstore.get(thumbnail)
         if cached:
             return cached
+        #fixing misssing 'image_info' to be compatible with sorl-thumbnail newewst version
+        else:
+            # We have to check exists() because the Storage backend does not
+            # overwrite in some implementations.
+            # so we make the assumption that if the thumbnail is not cached, it doesn't exist
+            try:
+                source_image = default.engine.get_image(source)
+            except IOError:
+                if settings.THUMBNAIL_DUMMY:
+                    return DummyImageFile(geometry_string)
+                else:
+                    # if S3Storage says file doesn't exist remotely, don't try to
+                    # create it and exit early.
+                    # Will return working empty image type; 404'd image
+                    logger.warn('Remote file [%s] at [%s] does not exist', file_, geometry_string)
+                    return thumbnail
+
+            # We might as well set the size since we have the image in memory
+            image_info = default.engine.get_image_info(source_image)
+            options['image_info'] = image_info
 
         # We cannot check if the file exists, as remote storage is slow. If
         # we have reached this point, the image does not exist in our kvstore
